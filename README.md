@@ -1,7 +1,3 @@
-# spring-ecommerce-api
-Simple e-commerce backend API built with Spring Boot, PostgreSQL and Flyway
-
-
 # Spring E-commerce API
 
 Simple e-commerce backend API built with:
