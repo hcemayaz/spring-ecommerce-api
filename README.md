@@ -33,6 +33,7 @@ The project follows a **Layered Architecture**.
 - `domain` – JPA entities
 - `dto` – request/response models
 - `exception` – global exception handling
+- `config` – OpenApi configuration
 
 ---
 
