@@ -29,7 +29,7 @@ public class Product {
     private BigDecimal price;
 
     @Column (name = "stock_quantity",nullable = false)
-    private Integer stokeQuantity;
+    private Integer stockQuantity;
 
     @Column(name = "is_active", nullable = false)
     private Boolean active;
