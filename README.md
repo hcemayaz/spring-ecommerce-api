@@ -46,6 +46,10 @@ The project follows a **Layered Architecture**.
 - Get category by id
 - List all categories
 - Hierarchical category support (parent–child)
+- Create product
+- Update product
+- Delete product
+- Get product by id
 
 ### Error Handling
 - Global exception handling with meaningful HTTP status codes
