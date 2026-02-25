@@ -46,10 +46,12 @@ The project follows a **Layered Architecture**.
 - Get category by id
 - List all categories
 - Hierarchical category support (parent–child)
+### Product Management
 - Create product
 - Update product
 - Delete product
 - Get product by id
+### Customer Management
 - Create customer
 - Update customer
 - Delete customer
