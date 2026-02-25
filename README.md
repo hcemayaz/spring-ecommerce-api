@@ -50,6 +50,11 @@ The project follows a **Layered Architecture**.
 - Update product
 - Delete product
 - Get product by id
+- Create customer
+- Update customer
+- Delete customer
+- Get customer by id
+- List all customers
 
 ### Error Handling
 - Global exception handling with meaningful HTTP status codes
