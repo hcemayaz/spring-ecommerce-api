@@ -57,6 +57,11 @@ The project follows a **Layered Architecture**.
 - Delete customer
 - Get customer by id
 - List all customers
+### Order Management
+- Create order
+- Update order
+- Delete order
+- Get order by id
 
 ### Error Handling
 - Global exception handling with meaningful HTTP status codes
