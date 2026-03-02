@@ -11,6 +11,7 @@ import com.example.springecommerceapi.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -76,6 +77,14 @@ public class ProductService {
 
     public List<ProductResponse> getAll() {
         return productRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    public List<ProductResponse> searchProducts(String keyword, BigDecimal minPrice, BigDecimal maxPrice,
+                                                Boolean inStock) {
+        return productRepository.searchProducts(keyword, minPrice, maxPrice, inStock)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
