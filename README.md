@@ -1,18 +1,27 @@
 # Spring E-commerce API
 
-A simple yet production-ready e-commerce backend API built with **Spring Boot** following a layered architecture and clean coding principles.
+A production-grade, AI-powered e-commerce backend built with **Spring Boot 4.x**, following clean architecture principles and modern DevOps practices.
 
-This project is designed as a portfolio project to demonstrate backend development skills including REST API design, database migrations, validation, testing, and global exception handling.
+This project demonstrates:
+
+- Layered Architecture
+- RESTful API design
+- Database versioning & migrations
+- AI integration (Spring AI + Ollama)
+- Dockerized infrastructure
+- Test automation & code quality enforcement
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Java 21**
-- **Spring Boot**
+- **Spring Boot 4.x**
 - **Spring Data JPA (Hibernate)**
-- **PostgreSQL**
+- **PostgreSQL 15**
 - **Flyway** (database migrations)
+- **Spring AI**
+- **Ollama (LLaMA 3.2)**
 - **Docker & Docker Compose**
 - **Swagger / OpenAPI**
 - **JUnit 5 & Mockito**
@@ -62,10 +71,29 @@ The project follows a **Layered Architecture**.
 - Update order
 - Delete order
 - Get order by id
+## 🤖 AI Shopping Assistant
+- Allows natural language product search using local LLM.
+
+### Assistant Endpoint
+- POST /api/assistant/chat
+
+
+### 📨 Example Request (cURL)
+
+```bash
+curl -X POST http://localhost:8080/api/assistant/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Suggest an affordable wireless headset"
+  }'
+```
+
 
 ### Error Handling
 - Global exception handling with meaningful HTTP status codes
 - Standardized error response format
+- Meaningful HTTP status codes
+- AI exception management
 
 ---
 
