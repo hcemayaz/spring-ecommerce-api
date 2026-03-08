@@ -4,5 +4,6 @@ import java.util.List;
 
 public record AssistantResponse(
         String answer,
-        List<ProductResponse> recommendedProducts) {
+        List<ProductResponse> recommendedProducts
+) {
 }

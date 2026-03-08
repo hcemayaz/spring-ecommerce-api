@@ -25,5 +25,9 @@ spring:
         options:
           model: llama3.2
 
+n8n:
+  webhook-url: https://your-account.app.n8n.cloud/webhook-test/conversation-completed
+  enabled: true
+
 server:
   port: 8080
