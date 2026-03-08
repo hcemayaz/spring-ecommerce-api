@@ -2,6 +2,13 @@
 
 A production-grade, AI-powered e-commerce backend built with **Spring Boot 3.4.2**, following clean architecture principles and modern DevOps practices.
 
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=hcemayaz_spring-ecommerce-api&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=hcemayaz_spring-ecommerce-api)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=hcemayaz_spring-ecommerce-api&metric=security_rating)](https://sonarcloud.io/dashboard?id=hcemayaz_spring-ecommerce-api)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=hcemayaz_spring-ecommerce-api&metric=coverage)](https://sonarcloud.io/dashboard?id=hcemayaz_spring-ecommerce-api)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=hcemayaz_spring-ecommerce-api&metric=code_smells)](https://sonarcloud.io/dashboard?id=hcemayaz_spring-ecommerce-api)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=hcemayaz_spring-ecommerce-api&metric=sqale_index)](https://sonarcloud.io/dashboard?id=hcemayaz_spring-ecommerce-api)
+
+
 This project demonstrates:
 
 - Layered Architecture

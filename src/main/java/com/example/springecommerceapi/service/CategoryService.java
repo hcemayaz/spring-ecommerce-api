@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 
-// TODO: Add Log4j2-based logging
 
 @Service
 @RequiredArgsConstructor
