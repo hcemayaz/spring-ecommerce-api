@@ -145,6 +145,28 @@ class OrderServiceTest {
             assertThat(response.getCustomerName()).isEqualTo("John Doe");
             verify(orderRepository).findById(1L);
         }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when order does not exist")
+        void getById_WhenNotFound_ShouldThrow() {
+            when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderService.getById(99L))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Order not found with id: 99");
+        }
+
+        @Test
+        @DisplayName("Should return all orders")
+        void getAll_ShouldReturnAllOrders() {
+            when(orderRepository.findAll()).thenReturn(List.of(order));
+
+            List<OrderResponse> responses = orderService.getAll();
+
+            assertThat(responses).hasSize(1);
+            assertThat(responses.get(0).getCustomerName()).isEqualTo("John Doe");
+            verify(orderRepository).findAll();
+        }
     }
 
     @Nested

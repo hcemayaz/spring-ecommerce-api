@@ -178,6 +178,20 @@ class ProductServiceTest {
                     .containsExactlyInAnyOrder(1L, 2L);
             verify(productRepository).findAll();
         }
+
+        @Test
+        @DisplayName("Should search products with criteria")
+        void searchProducts_shouldReturnFilteredProducts() {
+            Product product = createDefaultProduct();
+            when(productRepository.searchProducts("iPhone", BigDecimal.valueOf(10000), BigDecimal.valueOf(60000), true))
+                    .thenReturn(List.of(product));
+
+            List<ProductResponse> responses = productService.searchProducts("iPhone", BigDecimal.valueOf(10000), BigDecimal.valueOf(60000), true);
+
+            assertThat(responses).hasSize(1);
+            assertThat(responses.get(0).getName()).isEqualTo("iPhone 15");
+            verify(productRepository).searchProducts("iPhone", BigDecimal.valueOf(10000), BigDecimal.valueOf(60000), true);
+        }
     }
 
     @Nested
