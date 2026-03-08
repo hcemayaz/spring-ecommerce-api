@@ -103,13 +103,13 @@ class AiShoppingAssistantServiceTest {
         }
 
         @Test
-        @DisplayName("Should return fallback when model returns invalid JSON")
-        void chat_WhenModelReturnsInvalidJson_ShouldReturnFallbackResponse() {
+        @DisplayName("Should wrap non-JSON response as answer when model returns invalid JSON")
+        void chat_WhenModelReturnsInvalidJson_ShouldWrapAsAnswer() {
             mockChatClientChain("bu geçerli bir json değil");
 
             AssistantResponse response = assistantService.chat("laptop öner", 1L, "test@test.com", "ecommerce_chat");
 
-            assertThat(response.answer()).contains("sorun oluştu");
+            assertThat(response.answer()).isEqualTo("bu geçerli bir json değil");
             assertThat(response.recommendedProducts()).isEmpty();
         }
     }
@@ -229,9 +229,10 @@ class AiShoppingAssistantServiceTest {
         }
 
         @Test
-        @DisplayName("Should return trimmed string when no braces")
-        void sanitizeJsonLikeString_WhenNoBraces_ShouldReturnTrimmedString() throws Exception {
-            assertThat(invokeSanitize("no json here")).isEqualTo("no json here");
+        @DisplayName("Should wrap as JSON answer when no braces found")
+        void sanitizeJsonLikeString_WhenNoBraces_ShouldWrapAsJsonAnswer() throws Exception {
+            assertThat(invokeSanitize("no json here"))
+                    .isEqualTo("{\"answer\":\"no json here\",\"recommendedProducts\":[]}");
         }
 
         @Test

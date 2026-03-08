@@ -7,6 +7,8 @@ import com.example.springecommerceapi.repository.CustomerRepository;
 import com.example.springecommerceapi.repository.OrderRepository;
 import com.example.springecommerceapi.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("OrderService Tests")
 class OrderServiceTest {
 
     @Mock
@@ -42,7 +45,6 @@ class OrderServiceTest {
     private Customer customer;
     private Product product;
     private Order order;
-    private OrderItem orderItem;
     private OrderRequest orderRequest;
 
     @BeforeEach
@@ -60,7 +62,7 @@ class OrderServiceTest {
                 .price(BigDecimal.valueOf(50.0))
                 .build();
 
-        orderItem = OrderItem.builder()
+        OrderItem orderItem = OrderItem.builder()
                 .id(10L)
                 .product(product)
                 .quantity(2)
@@ -82,87 +84,109 @@ class OrderServiceTest {
 
         orderItem.setOrder(order);
 
-        OrderItemRequest itemRequest = OrderItemRequest.builder()
-                .productId(100L)
-                .quantity(2)
-                .build();
-
         orderRequest = OrderRequest.builder()
                 .customerId(1L)
-                .items(List.of(itemRequest))
+                .items(List.of(OrderItemRequest.builder()
+                        .productId(100L)
+                        .quantity(2)
+                        .build()))
                 .build();
     }
 
-    @Test
-    void create_WhenValidRequest_ShouldReturnOrderResponse() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(productRepository.findById(100L)).thenReturn(Optional.of(product));
-        when(orderRepository.save(any(Order.class))).thenReturn(order);
+    @Nested
+    @DisplayName("Create operations")
+    class CreateTests {
 
-        OrderResponse response = orderService.create(orderRequest);
+        @Test
+        @DisplayName("Should return order response when request is valid")
+        void create_WhenValidRequest_ShouldReturnOrderResponse() {
+            when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+            when(productRepository.findById(100L)).thenReturn(Optional.of(product));
+            when(orderRepository.save(any(Order.class))).thenReturn(order);
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getCustomerId()).isEqualTo(1L);
-        assertThat(response.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(100.0));
-        assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING);
-        assertThat(response.getItems()).hasSize(1);
-        assertThat(response.getItems().get(0).getLineTotal()).isEqualByComparingTo(BigDecimal.valueOf(100.0));
+            OrderResponse response = orderService.create(orderRequest);
 
-        verify(customerRepository, times(1)).findById(1L);
-        verify(productRepository, times(1)).findById(100L);
-        verify(orderRepository, times(1)).save(any(Order.class));
+            assertThat(response.getId()).isEqualTo(1L);
+            assertThat(response.getCustomerId()).isEqualTo(1L);
+            assertThat(response.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(100.0));
+            assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING);
+            assertThat(response.getItems()).hasSize(1);
+            assertThat(response.getItems().get(0).getLineTotal()).isEqualByComparingTo(BigDecimal.valueOf(100.0));
+            verify(customerRepository).findById(1L);
+            verify(productRepository).findById(100L);
+            verify(orderRepository).save(any(Order.class));
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when customer not found")
+        void create_WhenCustomerNotFound_ShouldThrowNotFoundException() {
+            when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderService.create(orderRequest))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Customer not found with id: 1");
+
+            verify(orderRepository, never()).save(any(Order.class));
+        }
     }
 
-    @Test
-    void create_WhenCustomerNotFound_ShouldThrowNotFoundException() {
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("Read operations")
+    class ReadTests {
 
-        assertThatThrownBy(() -> orderService.create(orderRequest))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Customer not found with id: 1");
+        @Test
+        @DisplayName("Should return order when it exists")
+        void getById_WhenOrderExists_ShouldReturnOrderResponse() {
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        verify(orderRepository, never()).save(any(Order.class));
+            OrderResponse response = orderService.getById(1L);
+
+            assertThat(response.getId()).isEqualTo(1L);
+            assertThat(response.getCustomerName()).isEqualTo("John Doe");
+            verify(orderRepository).findById(1L);
+        }
     }
 
-    @Test
-    void getById_WhenOrderExists_ShouldReturnOrderResponse() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    @Nested
+    @DisplayName("Update operations")
+    class UpdateTests {
 
-        OrderResponse response = orderService.getById(1L);
+        @Test
+        @DisplayName("Should return updated response when order exists")
+        void updateStatus_WhenOrderExists_ShouldReturnUpdatedResponse() {
+            when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getCustomerName()).isEqualTo("John Doe");
-        verify(orderRepository, times(1)).findById(1L);
+            Order updatedOrder = Order.builder()
+                    .id(1L)
+                    .customer(customer)
+                    .status(OrderStatus.SHIPPED)
+                    .totalAmount(BigDecimal.valueOf(100.0))
+                    .items(order.getItems())
+                    .build();
+
+            when(orderRepository.save(any(Order.class))).thenReturn(updatedOrder);
+
+            OrderResponse response = orderService.updateStatus(1L, OrderStatus.SHIPPED);
+
+            assertThat(response.getStatus()).isEqualTo(OrderStatus.SHIPPED);
+            verify(orderRepository).findById(1L);
+            verify(orderRepository).save(any(Order.class));
+        }
     }
 
-    @Test
-    void updateStatus_WhenOrderExists_ShouldReturnUpdatedResponse() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    @Nested
+    @DisplayName("Delete operations")
+    class DeleteTests {
 
-        Order updatedOrder = Order.builder()
-                .id(1L)
-                .customer(customer)
-                .status(OrderStatus.SHIPPED)
-                .totalAmount(BigDecimal.valueOf(100.0))
-                .items(order.getItems())
-                .build();
+        @Test
+        @DisplayName("Should delete order when it exists")
+        void delete_WhenOrderExists_ShouldDeleteOrder() {
+            when(orderRepository.existsById(1L)).thenReturn(true);
 
-        when(orderRepository.save(any(Order.class))).thenReturn(updatedOrder);
+            orderService.delete(1L);
 
-        OrderResponse response = orderService.updateStatus(1L, OrderStatus.SHIPPED);
-
-        assertThat(response.getStatus()).isEqualTo(OrderStatus.SHIPPED);
-        verify(orderRepository, times(1)).findById(1L);
-        verify(orderRepository, times(1)).save(any(Order.class));
-    }
-
-    @Test
-    void delete_WhenOrderExists_ShouldDeleteOrder() {
-        when(orderRepository.existsById(1L)).thenReturn(true);
-
-        orderService.delete(1L);
-
-        verify(orderRepository, times(1)).existsById(1L);
-        verify(orderRepository, times(1)).deleteById(1L);
+            verify(orderRepository).existsById(1L);
+            verify(orderRepository).deleteById(1L);
+        }
     }
 }
