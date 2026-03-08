@@ -12,9 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -105,6 +108,101 @@ class CategoryServiceTest {
             assertThat(response.getName()).isEqualTo("Books");
             assertThat(response.getParentId()).isNull();
             verify(categoryRepository).findById(5L);
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when category does not exist")
+        void getById_WhenNotFound_ShouldThrow() {
+            when(categoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> categoryService.getById(99L))
+                    .isInstanceOf(com.example.springecommerceapi.exception.NotFoundException.class)
+                    .hasMessageContaining("Category not found");
+        }
+
+        @Test
+        @DisplayName("Should return all categories")
+        void getAll_ShouldReturnList() {
+            List<Category> categories = List.of(
+                    Category.builder().id(1L).name("Electronics").build(),
+                    Category.builder().id(2L).name("Books").build()
+            );
+            when(categoryRepository.findAll()).thenReturn(categories);
+
+            List<CategoryResponse> responses = categoryService.getAll();
+
+            assertThat(responses).hasSize(2);
+            verify(categoryRepository).findAll();
+        }
+    }
+
+    @Nested
+    @DisplayName("Update operations")
+    class UpdateTests {
+
+        @Test
+        @DisplayName("Should update category without parent")
+        void update_ShouldUpdateCategory() {
+            Category existing = Category.builder().id(1L).name("Electronics").build();
+            Category updated = Category.builder().id(1L).name("Updated Electronics").build();
+
+            CategoryRequest request = new CategoryRequest();
+            request.setName("Updated Electronics");
+
+            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.save(any(Category.class))).thenReturn(updated);
+
+            CategoryResponse response = categoryService.update(1L, request);
+
+            assertThat(response.getName()).isEqualTo("Updated Electronics");
+            assertThat(response.getParentId()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should update category with parent")
+        void update_WithParent_ShouldSetParent() {
+            Category existing = Category.builder().id(1L).name("Phones").build();
+            Category parent = Category.builder().id(10L).name("Electronics").build();
+            Category updated = Category.builder().id(1L).name("Phones").parent(parent).build();
+
+            CategoryRequest request = new CategoryRequest();
+            request.setName("Phones");
+            request.setParentId(10L);
+
+            when(categoryRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findById(10L)).thenReturn(Optional.of(parent));
+            when(categoryRepository.save(any(Category.class))).thenReturn(updated);
+
+            CategoryResponse response = categoryService.update(1L, request);
+
+            assertThat(response.getParentId()).isEqualTo(10L);
+        }
+    }
+
+    @Nested
+    @DisplayName("Delete operations")
+    class DeleteTests {
+
+        @Test
+        @DisplayName("Should delete category when exists")
+        void delete_WhenExists_ShouldDelete() {
+            when(categoryRepository.existsById(1L)).thenReturn(true);
+
+            categoryService.delete(1L);
+
+            verify(categoryRepository).deleteById(1L);
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when category does not exist")
+        void delete_WhenNotFound_ShouldThrow() {
+            when(categoryRepository.existsById(99L)).thenReturn(false);
+
+            assertThatThrownBy(() -> categoryService.delete(99L))
+                    .isInstanceOf(com.example.springecommerceapi.exception.NotFoundException.class)
+                    .hasMessageContaining("Category not found");
+
+            verify(categoryRepository, never()).deleteById(anyLong());
         }
     }
 }
