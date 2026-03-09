@@ -255,6 +255,128 @@ class ProductServiceTest {
     }
 
     @Nested
+    @DisplayName("Category resolution edge cases")
+    class CategoryResolutionTests {
+
+        @Test
+        @DisplayName("Should create product without category when categoryId is null")
+        void create_shouldCreateProductWithoutCategory_whenCategoryIdIsNull() {
+            ProductRequest request = createDefaultRequest();
+            request.setCategoryId(null);
+
+            Product productWithoutCategory = Product.builder()
+                    .id(2L)
+                    .name("iPhone 15")
+                    .sku("IPHONE-15-BLACK-128")
+                    .price(BigDecimal.valueOf(49999.90))
+                    .stockQuantity(10)
+                    .active(true)
+                    .category(null)
+                    .build();
+
+            when(productRepository.existsBySku(request.getSku())).thenReturn(false);
+            when(productRepository.save(any(Product.class))).thenReturn(productWithoutCategory);
+
+            ProductResponse response = productService.create(request);
+
+            assertThat(response.getCategoryId()).isNull();
+            assertThat(response.getCategoryName()).isNull();
+            verify(categoryRepository, never()).findById(anyLong());
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when category does not exist")
+        void create_shouldThrowNotFound_whenCategoryDoesNotExist() {
+            ProductRequest request = createDefaultRequest();
+            request.setCategoryId(999L);
+
+            when(productRepository.existsBySku(request.getSku())).thenReturn(false);
+            when(categoryRepository.findById(999L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> productService.create(request))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Category not found with id: 999");
+        }
+
+        @Test
+        @DisplayName("Should update product with null category")
+        void update_shouldSetNullCategory_whenCategoryIdIsNull() {
+            Product existing = createDefaultProduct();
+            ProductRequest request = createDefaultRequest();
+            request.setCategoryId(null);
+
+            Product updated = Product.builder()
+                    .id(1L).name("iPhone 15").sku("IPHONE-15-BLACK-128")
+                    .price(BigDecimal.valueOf(49999.90)).stockQuantity(10)
+                    .active(true).category(null).build();
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(productRepository.save(any(Product.class))).thenReturn(updated);
+
+            ProductResponse response = productService.update(1L, request);
+
+            assertThat(response.getCategoryId()).isNull();
+            assertThat(response.getCategoryName()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Update edge cases")
+    class UpdateEdgeCaseTests {
+
+        @Test
+        @DisplayName("Should allow update with same SKU without checking uniqueness")
+        void update_shouldNotCheckUniqueness_whenSkuUnchanged() {
+            Product existing = createDefaultProduct();
+            ProductRequest request = createDefaultRequest();
+
+            Product updated = createDefaultProduct();
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(categoryRepository.findById(1L)).thenReturn(Optional.of(electronicsCategory));
+            when(productRepository.save(any(Product.class))).thenReturn(updated);
+
+            ProductResponse response = productService.update(1L, request);
+
+            assertThat(response.getId()).isEqualTo(1L);
+            verify(productRepository, never()).existsBySku(anyString());
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when updating non-existent product")
+        void update_shouldThrowNotFound_whenProductDoesNotExist() {
+            when(productRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> productService.update(99L, createDefaultRequest()))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Product not found with id: 99");
+        }
+
+        @Test
+        @DisplayName("Should allow SKU change when new SKU does not exist")
+        void update_shouldAllowSkuChange_whenNewSkuIsAvailable() {
+            Product existing = createDefaultProduct();
+            ProductRequest request = createDefaultRequest();
+            request.setSku("NEW-SKU");
+
+            Product updated = Product.builder()
+                    .id(1L).name("iPhone 15").sku("NEW-SKU")
+                    .price(BigDecimal.valueOf(49999.90)).stockQuantity(10)
+                    .active(true).category(electronicsCategory).build();
+
+            when(productRepository.findById(1L)).thenReturn(Optional.of(existing));
+            when(productRepository.existsBySku("NEW-SKU")).thenReturn(false);
+            when(categoryRepository.findById(1L)).thenReturn(Optional.of(electronicsCategory));
+            when(productRepository.save(any(Product.class))).thenReturn(updated);
+
+            ProductResponse response = productService.update(1L, request);
+
+            assertThat(response.getSku()).isEqualTo("NEW-SKU");
+            verify(productRepository).existsBySku("NEW-SKU");
+        }
+    }
+
+    @Nested
     @DisplayName("Delete operations")
     class DeleteTests {
 
