@@ -24,6 +24,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -118,6 +119,60 @@ class OrderServiceTest {
         }
 
         @Test
+        @DisplayName("Should create order with multiple items and calculate total")
+        void create_WhenMultipleItems_ShouldCalculateTotalCorrectly() {
+            Product product2 = Product.builder()
+                    .id(200L).name("Another Product")
+                    .price(BigDecimal.valueOf(30.0)).build();
+
+            OrderRequest multiItemRequest = OrderRequest.builder()
+                    .customerId(1L)
+                    .items(List.of(
+                            OrderItemRequest.builder().productId(100L).quantity(2).build(),
+                            OrderItemRequest.builder().productId(200L).quantity(3).build()
+                    ))
+                    .build();
+
+            OrderItem item2 = OrderItem.builder()
+                    .id(20L).product(product2).quantity(3)
+                    .unitPrice(BigDecimal.valueOf(30.0))
+                    .lineTotal(BigDecimal.valueOf(90.0)).build();
+
+            List<OrderItem> multiItems = new ArrayList<>(order.getItems());
+            multiItems.add(item2);
+            Order multiOrder = Order.builder()
+                    .id(2L).customer(customer).status(OrderStatus.PENDING)
+                    .totalAmount(BigDecimal.valueOf(190.0)).items(multiItems)
+                    .createdAt(LocalDateTime.now()).build();
+
+            when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+            when(productRepository.findById(100L)).thenReturn(Optional.of(product));
+            when(productRepository.findById(200L)).thenReturn(Optional.of(product2));
+            when(orderRepository.save(any(Order.class))).thenReturn(multiOrder);
+
+            OrderResponse response = orderService.create(multiItemRequest);
+
+            assertThat(response.getItems()).hasSize(2);
+            assertThat(response.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(190.0));
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when product not found")
+        void create_WhenProductNotFound_ShouldThrowNotFoundException() {
+            OrderRequest badRequest = OrderRequest.builder()
+                    .customerId(1L)
+                    .items(List.of(OrderItemRequest.builder().productId(999L).quantity(1).build()))
+                    .build();
+
+            when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+            when(productRepository.findById(999L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderService.create(badRequest))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Product not found with id: 999");
+        }
+
+        @Test
         @DisplayName("Should throw NotFoundException when customer not found")
         void create_WhenCustomerNotFound_ShouldThrowNotFoundException() {
             when(customerRepository.findById(1L)).thenReturn(Optional.empty());
@@ -197,6 +252,21 @@ class OrderServiceTest {
     }
 
     @Nested
+    @DisplayName("Update edge cases")
+    class UpdateEdgeCaseTests {
+
+        @Test
+        @DisplayName("Should throw NotFoundException when updating status of non-existent order")
+        void updateStatus_WhenNotFound_ShouldThrow() {
+            when(orderRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> orderService.updateStatus(99L, OrderStatus.SHIPPED))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Order not found with id: 99");
+        }
+    }
+
+    @Nested
     @DisplayName("Delete operations")
     class DeleteTests {
 
@@ -209,6 +279,18 @@ class OrderServiceTest {
 
             verify(orderRepository).existsById(1L);
             verify(orderRepository).deleteById(1L);
+        }
+
+        @Test
+        @DisplayName("Should throw NotFoundException when deleting non-existent order")
+        void delete_WhenNotFound_ShouldThrow() {
+            when(orderRepository.existsById(99L)).thenReturn(false);
+
+            assertThatThrownBy(() -> orderService.delete(99L))
+                    .isInstanceOf(NotFoundException.class)
+                    .hasMessageContaining("Order not found with id: 99");
+
+            verify(orderRepository, never()).deleteById(anyLong());
         }
     }
 }

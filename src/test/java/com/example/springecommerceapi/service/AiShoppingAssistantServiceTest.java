@@ -236,6 +236,34 @@ class AiShoppingAssistantServiceTest {
         }
 
         @Test
+        @DisplayName("Should handle empty string input")
+        void sanitizeJsonLikeString_WhenEmpty_ShouldWrapAsJsonAnswer() throws Exception {
+            String result = invokeSanitize("");
+            assertThat(result).contains("answer");
+        }
+
+        @Test
+        @DisplayName("Should escape quotes in non-JSON response")
+        void sanitizeJsonLikeString_WhenContainsQuotes_ShouldEscapeQuotes() throws Exception {
+            String result = invokeSanitize("this has \"quotes\" in it");
+            assertThat(result).contains("\\\"quotes\\\"");
+        }
+
+        @Test
+        @DisplayName("Should handle backslash in non-JSON response")
+        void sanitizeJsonLikeString_WhenContainsBackslash_ShouldEscape() throws Exception {
+            String result = invokeSanitize("path\\to\\file");
+            assertThat(result).contains("answer");
+        }
+
+        @Test
+        @DisplayName("Should remove invalid escape sequences from JSON")
+        void sanitizeJsonLikeString_WhenInvalidEscapeInJson_ShouldClean() throws Exception {
+            String result = invokeSanitize("{\"answer\": \"test\\x value\"}");
+            assertThat(result).contains("testx value");
+        }
+
+        @Test
         @DisplayName("Should remove TL from price")
         void sanitizeJsonLikeString_WhenPriceWithTL_ShouldRemoveTL() throws Exception {
             assertThat(invokeSanitize("{\"price\": \"500 TL\"}")).isEqualTo("{\"price\": \"500\"}");
