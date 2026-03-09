@@ -241,13 +241,21 @@ Returns current n8n configuration status (webhook URL, enabled, API key presence
 - Static code analysis and quality gates enforced by **SonarCloud**
 
 ### Test Coverage
-| Service | Tests |
-|---------|-------|
-| CategoryService | 3 tests |
-| CustomerService | 6 tests |
-| ProductService | 8 tests |
-| OrderService | 5 tests |
-| AiShoppingAssistantService | 14 tests |
+| Layer | Class | Tests |
+|-------|-------|-------|
+| Service | CategoryService | 9 |
+| Service | CustomerService | 7 |
+| Service | ProductService | 10 |
+| Service | OrderService | 7 |
+| Service | AiShoppingAssistantService | 16 |
+| Controller | CategoryController | 5 |
+| Controller | CustomerController | 5 |
+| Controller | ProductController | 5 |
+| Controller | OrderController | 6 |
+| Controller | AiShoppingAssistantController | 1 |
+| Exception | GlobalExceptionHandler | 3 |
+| Function | ProductSearchFunctionConfig | 1 |
+| Integration | N8nEventPublisher | 3 |
 
 ### Run Tests
 ```bash
@@ -388,6 +396,18 @@ spring-ecommerce-api/
 │   │           └── V1__init.sql
 │   └── test/
 │       └── java/com/example/springecommerceapi/
+│           ├── controller/
+│           │   ├── AiShoppingAssistantControllerTest.java
+│           │   ├── CategoryControllerTest.java
+│           │   ├── CustomerControllerTest.java
+│           │   ├── OrderControllerTest.java
+│           │   └── ProductControllerTest.java
+│           ├── exception/
+│           │   └── GlobalExceptionHandlerTest.java
+│           ├── function/
+│           │   └── ProductSearchFunctionConfigTest.java
+│           ├── integration/
+│           │   └── N8nEventPublisherTest.java
 │           ├── service/
 │           │   ├── AiShoppingAssistantServiceTest.java
 │           │   ├── CategoryServiceTest.java
